@@ -17,6 +17,40 @@
 - OS 2.0.4
   - Update display-drivers
 
+## Nord 4 Build & Packaging
+
+### Prerequisites
+- Ubuntu 22.04 (or similar) with `build-essential clang lld llvm lld-15 llvm-15 lz4 rsync bc flex bison python3` and the cross toolchains `gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf`.
+- Environment variables set for the Android kernel toolchain:
+  ```bash
+  export ARCH=arm64
+  export LLVM=1
+  export LLVM_IAS=1
+  export CROSS_COMPILE=aarch64-linux-gnu-
+  export CROSS_COMPILE_COMPAT=arm-linux-gnueabihf-
+  ```
+
+### Configure and build
+```bash
+mkdir -p out
+make O=out generic_sxr_defconfig
+ARCH=arm64 LLVM=1 KCONFIG_CONFIG=out/.config \
+  ./scripts/kconfig/merge_config.sh -m out/.config \
+  arch/arm64/configs/vendor/neo_le.config
+make O=out olddefconfig
+make -j$(nproc) O=out Image modules dtbs
+```
+
+The resulting kernel image lives in `out/arch/arm64/boot/Image` (and `Image.gz`), with Nord 4 DTBs under `out/arch/arm64/boot/dts/vendor/qcom/neo*.dtb`.
+
+### Package distributables
+After a successful build:
+```bash
+./tools/package_nord4.sh
+```
+
+This script collects the kernel image, DTBs, `System.map`, `Module.symvers`, and every `.ko` module into `dist/nord4-<timestamp>/` and produces a compressed archive `dist/nord4-kernel-<timestamp>.tar.gz` ready to distribute.
+
 # How do I submit patches to Android Common Kernels
 
 1. BEST: Make all of your changes to upstream Linux. If appropriate, backport to the stable releases.
@@ -166,4 +200,3 @@ a maintainer tree)
 - If the patch is a new feature
     - tag the patch subject with `ANDROID:`
     - add a `Bug:` tag with the Android bug (required for android-specific features)
-

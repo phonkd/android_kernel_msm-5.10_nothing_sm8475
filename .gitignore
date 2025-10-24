@@ -144,6 +144,9 @@ x509.genkey
 /allmod.config
 /allno.config
 /allrandom.config
+# Build packaging output
+/dist/
+
 /allyes.config
 
 # Kconfig savedefconfig output
